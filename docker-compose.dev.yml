@@ -1,0 +1,31 @@
+# Development Docker Compose
+# Runs only the database, backend/frontend run locally
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # PostgreSQL Database Only
+  # ===========================================
+  db:
+    image: postgres:15-alpine
+    container_name: plinko-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: plinko
+      POSTGRES_PASSWORD: plinko_secret
+      POSTGRES_DB: plinko
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plinko"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data_dev:
+    driver: local
