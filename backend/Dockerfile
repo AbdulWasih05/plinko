@@ -9,7 +9,7 @@ FROM node:18-slim AS builder
 WORKDIR /app
 
 # Install system dependencies for Prisma
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y && apt-get install -y openssl ca-certificates curl
 
 # Copy package files
 COPY package*.json ./
@@ -31,6 +31,9 @@ RUN npx prisma generate
 FROM node:18-slim AS production
 
 WORKDIR /app
+
+# Install production system dependencies for Prisma
+RUN apt-get update -y && apt-get install -y openssl ca-certificates curl && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN groupadd -g 1001 nodejs && \
