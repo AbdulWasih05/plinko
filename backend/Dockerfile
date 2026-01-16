@@ -18,6 +18,7 @@ RUN npm install
 COPY prisma ./prisma/
 
 # Generate Prisma client
+ARG DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 # ============================================
