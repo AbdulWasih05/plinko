@@ -4,9 +4,12 @@
 # ============================================
 # Build Stage
 # ============================================
-FROM node:18-alpine AS builder
+FROM node:18-slim AS builder
 
 WORKDIR /app
+
+# Install system dependencies for Prisma
+RUN apt-get update -y && apt-get install -y openssl
 
 # Copy package files
 COPY package*.json ./
@@ -25,13 +28,13 @@ RUN npx prisma generate
 # ============================================
 # Production Stage
 # ============================================
-FROM node:18-alpine AS production
+FROM node:18-slim AS production
 
 WORKDIR /app
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S plinko -u 1001
+RUN groupadd -g 1001 nodejs && \
+    useradd -u 1001 -g nodejs -s /bin/sh plinko
 
 # Copy node_modules from builder
 COPY --from=builder /app/node_modules ./node_modules
@@ -58,7 +61,7 @@ EXPOSE 5000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:5000/api/health || exit 1
+    CMD curl --fail http://localhost:5000/api/health || exit 1
 
 # Run migrations and start server
 CMD ["sh", "-c", "npx prisma db push --skip-generate && node server.js"]
